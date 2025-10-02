@@ -1,49 +1,27 @@
 // ==UserScript==
-// @name         Crunchyroll Overlay Auto-Hide + Fullscreen Button Click
-// @namespace    custom
-// @version      1.5
-// @description  Hide overlay but keep controls clickable, and auto-click fullscreen button on play
-// @author       You
+// @name         Crunchyroll overlay invisible but clickable
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Elrejti az overlay-t, de a gombokat (fullscreen, pause, seek) kattinthatóvá hagyja
 // @match        https://static.crunchyroll.com/vilos-*
 // @grant        none
 // ==/UserScript==
 
 (function() {
-  'use strict';
+    'use strict';
 
-  function hideOverlay() {
-    const overlay = document.querySelector('#velocity-controls-package');
-    if (overlay) {
-      overlay.style.visibility = "hidden";
-      overlay.style.pointerEvents = "auto"; // kezelhető maradjon
+    function hideOverlay() {
+        const overlay = document.querySelector('#velocity-controls-package');
+        if (overlay) {
+            // teljesen átlátszó, de működő
+            overlay.style.opacity = "0";
+            overlay.style.pointerEvents = "auto";
+        }
     }
-  }
 
-  function clickFullscreenButton() {
-    const btn = document.querySelector('[data-testid="fullscreen-button"], button[aria-label="Fullscreen"]');
-    if (btn) {
-      btn.click();
-    }
-  }
+    // induláskor próbáljuk elrejteni
+    const observer = new MutationObserver(hideOverlay);
+    observer.observe(document.body, { childList: true, subtree: true });
 
-  function init(video) {
     hideOverlay();
-
-    const onFirstPlay = () => {
-      clickFullscreenButton();
-      video.removeEventListener('play', onFirstPlay);
-    };
-
-    video.addEventListener('play', onFirstPlay);
-  }
-
-  const observer = new MutationObserver(() => {
-    const video = document.querySelector('video');
-    if (video && !video.dataset.initDone) {
-      video.dataset.initDone = "true";
-      init(video);
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
 })();
