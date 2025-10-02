@@ -1,47 +1,45 @@
-
 // ==UserScript==
-// @name         Crunchyroll Overlay Auto-Hide + Auto Fullscreen (per episode)
+// @name         Crunchyroll Overlay AutoHide + Fullscreen
 // @namespace    custom
-// @version      1.2
-// @description  Always hide overlay and go fullscreen on each new video
-// @author       You
-// @match        https://static.crunchyroll.com/vilos-*
+// @match        https://static.crunchyroll.com/vilos-v2/web/vilos/player.html
 // @grant        none
 // ==/UserScript==
 
 (function() {
-  'use strict';
+    'use strict';
 
-  function hideOverlay() {
-    const overlay = document.querySelector('#velocity-controls-package');
-    if (overlay) {
-      overlay.style.visibility = "hidden";
-      overlay.style.pointerEvents = "auto"; // kezelhető maradjon
+    function hideOverlay() {
+        const overlay = document.querySelector(".erc-player-controls");
+        if (overlay) {
+            overlay.style.opacity = "0";
+            overlay.style.transition = "opacity 0.3s ease";
+        }
     }
-  }
 
-  function goFullscreen() {
-    const player = document.querySelector('video');
-    if (player && player.requestFullscreen) {
-      player.requestFullscreen().catch(err => {
-        console.warn("Fullscreen failed:", err);
-      });
+    function tryFullscreen() {
+        const video = document.querySelector("video");
+        if (video && video.requestFullscreen) {
+            video.requestFullscreen().catch(err => {
+                console.log("Fullscreen not allowed yet:", err);
+            });
+        }
     }
-  }
 
-  function init() {
-    hideOverlay();
-    goFullscreen();
-  }
-
-  // Mindig figyeljük a változásokat
-  const observer = new MutationObserver(() => {
-    const video = document.querySelector('video');
-    if (video && !video.dataset.initDone) {
-      video.dataset.initDone = "true";
-      init();
+    function init() {
+        // overlay rejtés
+        hideOverlay();
+        // késleltetett fullscreen
+        setTimeout(tryFullscreen, 2000);
     }
-  });
 
-  observer.observe(document.body, { childList: true, subtree: true });
+    // amikor a videó betöltődik
+    const observer = new MutationObserver(() => {
+        const video = document.querySelector("video");
+        if (video) {
+            init();
+            observer.disconnect();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
 })();
