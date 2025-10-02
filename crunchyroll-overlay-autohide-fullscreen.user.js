@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Crunchyroll Overlay Auto-Hide + Fullscreen on Play
+// @name         Crunchyroll Overlay Auto-Hide + Fullscreen Button Click
 // @namespace    custom
-// @version      1.4
-// @description  Hide overlay but keep controls clickable, and go fullscreen after first play click
+// @version      1.5
+// @description  Hide overlay but keep controls clickable, and auto-click fullscreen button on play
 // @author       You
 // @match        https://static.crunchyroll.com/vilos-*
 // @grant        none
@@ -19,31 +19,22 @@
     }
   }
 
-  function goFullscreen() {
-    const player = document.querySelector('video');
-    if (player) {
-      if (player.requestFullscreen) {
-        player.requestFullscreen().catch(() => {});
-      } else if (player.webkitRequestFullscreen) {
-        player.webkitRequestFullscreen();
-      } else if (player.msRequestFullscreen) {
-        player.msRequestFullscreen();
-      }
+  function clickFullscreenButton() {
+    const btn = document.querySelector('[data-testid="fullscreen-button"], button[aria-label="Fullscreen"]');
+    if (btn) {
+      btn.click();
     }
   }
 
   function init(video) {
     hideOverlay();
 
-    // egyszer figyeljük a kattintást/lejátszást
     const onFirstPlay = () => {
-      goFullscreen();
+      clickFullscreenButton();
       video.removeEventListener('play', onFirstPlay);
-      video.removeEventListener('click', onFirstPlay);
     };
 
     video.addEventListener('play', onFirstPlay);
-    video.addEventListener('click', onFirstPlay);
   }
 
   const observer = new MutationObserver(() => {
