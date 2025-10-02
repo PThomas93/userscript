@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Crunchyroll Overlay Auto-Hide + Fullscreen (stable)
+// @name         Crunchyroll Overlay Auto-Hide + Fullscreen on Play
 // @namespace    custom
-// @version      1.3
-// @description  Hide overlay but keep controls clickable, and try fullscreen on each new video
+// @version      1.4
+// @description  Hide overlay but keep controls clickable, and go fullscreen after first play click
 // @author       You
 // @match        https://static.crunchyroll.com/vilos-*
 // @grant        none
@@ -19,33 +19,38 @@
     }
   }
 
-  function tryFullscreen() {
+  function goFullscreen() {
     const player = document.querySelector('video');
     if (player) {
       if (player.requestFullscreen) {
-        player.requestFullscreen().catch(err => {
-          console.warn("Fullscreen not allowed automatically:", err);
-        });
-      } else if (player.webkitRequestFullscreen) { // Safari
+        player.requestFullscreen().catch(() => {});
+      } else if (player.webkitRequestFullscreen) {
         player.webkitRequestFullscreen();
-      } else if (player.msRequestFullscreen) { // IE/Edge legacy
+      } else if (player.msRequestFullscreen) {
         player.msRequestFullscreen();
       }
     }
   }
 
-  function init() {
+  function init(video) {
     hideOverlay();
-    // 1 másodperccel késleltetve próbál fullscreenbe menni
-    setTimeout(tryFullscreen, 1000);
+
+    // egyszer figyeljük a kattintást/lejátszást
+    const onFirstPlay = () => {
+      goFullscreen();
+      video.removeEventListener('play', onFirstPlay);
+      video.removeEventListener('click', onFirstPlay);
+    };
+
+    video.addEventListener('play', onFirstPlay);
+    video.addEventListener('click', onFirstPlay);
   }
 
-  // Figyel minden új videót
   const observer = new MutationObserver(() => {
     const video = document.querySelector('video');
     if (video && !video.dataset.initDone) {
       video.dataset.initDone = "true";
-      init();
+      init(video);
     }
   });
 
